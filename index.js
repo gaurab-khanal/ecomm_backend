@@ -1,7 +1,10 @@
 const app = require('./app');
 require('./config/db').connect();
 
+// cloud upload
 const cloudinary = require('cloudinary');
+
+
 
 const {PORT} = process.env;
 

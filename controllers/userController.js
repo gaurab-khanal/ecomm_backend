@@ -26,6 +26,7 @@ exports.signup = async (req, res) => {
         }
 
         const file = req.files.photo;
+
         const result = await cloudinary.v2.uploader.upload(file.tempFilePath, {
             folder: "users",
         })
@@ -117,7 +118,7 @@ exports.forgetPassword = async (req, res) => {
 
         await user.save({ validateBeforeSave: false });
 
-        const myUrl = `${req.protocol}://${req.get("host")}/password/reset/${forgetToken}`;
+        const myUrl = `${req.protocol}://${req.get("host")}/api/v1/password/reset/${forgetToken}`;
 
         const message = `Copy paste this link in your browser and hit enter \n\n ${myUrl}`;
 
@@ -179,4 +180,202 @@ exports.passwordReset = async (req, res) => {
         console.log(error)
     }
 
+}
+
+
+exports.getLoggedInUserDetails = async (req, res) => {
+    try {
+
+     const user = await User.findById(req.user.id)
+
+     res.status(200).json({
+        success: true,
+        user
+     })
+    } catch (error) {   
+        console.log(error)
+    }
+
+}
+
+// change password
+
+exports.changePassword = async (req,res)=>{
+    try {
+
+        // get user from middleware
+        const userId = req.user.id
+
+        const user = await User.findById(userId).select("+password");
+
+       const isPasswordCorrect = await user.isPasswordValidated(req.body.oldPassword);
+
+       if(!isPasswordCorrect){
+        return res.status(400).send("Current Password is incorrect");
+       }
+
+       user.password = req.body.password;
+
+       await user.save();
+
+       cookieToken(user,res)
+
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+
+exports.updateUserDetails = async (req,res)=>{
+    try {
+        // check if email and name exists
+
+        if(!(req.body.name && req.body.email)){
+            res.status(400).send("All fields are required!");
+        }
+
+        const newData = {
+            name : req.body.name,
+            email: req.body.email
+        };
+
+        if(req.files){
+            const user = await User.findById(req.user.id);
+
+            const imageId = user.photo.id;
+
+            // delete photo on cloudinary
+            const response = await cloudinary.v2.uploader.destroy(imageId);
+
+            // upload the new photo
+            const result = await cloudinary.v2.uploader.upload(req.files.photo.tempFilePath, {
+                folder: "users",
+            });
+
+            newData.photo = {
+                id: result.public_id,
+                secure_url: result.secure_url
+            }
+        }
+
+        const user = await User.findByIdAndUpdate(req.user.id, newData, {
+            new: true,
+            runValidators: true,
+            useFindAndMofify: false
+        })
+
+        res.status(200).json({
+            success: true,
+            user
+        })
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+
+// ADMIN starts
+
+exports.adminAllUser = async(req,res)=>{
+    try {
+        const users = await User.find();
+
+        res.status(200).json({
+            success: true,
+            users
+        })
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+exports.managerAllUser = async(req,res)=>{
+    try {
+        const users = await User.find({role: "user"});
+
+        res.status(200).json({
+            success: true,
+            users
+        })
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+
+exports.admingetOneUser = async(req,res)=>{
+    try {
+        const user = await User.findById(req.params.id);
+
+        if(!user){
+            res.status(400).send("No user");
+        }
+
+        res.status(200).json({
+            success: true,
+            user
+        })
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+
+exports.adminUpdateOneUserDetails = async (req,res)=>{
+    try {
+        // check if email and name exists
+
+        if(!(req.body.name && req.body.email)){
+            res.status(400).send("All fields are required!");
+        }
+
+        const newData = {
+            name : req.body.name,
+            email: req.body.email,
+            role: req.body.role
+        };
+
+
+        const user = await User.findByIdAndUpdate(req.params.id, newData, {
+            new: true,
+            runValidators: true,
+            useFindAndMofify: false
+        })
+
+        res.status(200).json({
+            success: true,
+            user
+        })
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+exports.adminDeleteOneUser = async (req,res)=>{
+    try {
+        const user = await User.findById(req.params.id);
+
+        if(user.role === "admin"){
+            return res.status(400).json({
+               message:  "Admin Cannot be deleted"
+            })
+        }
+
+        if(!user){
+            res.status.send("No user found");
+        }
+
+        const imageId = user.photo.id;
+
+        await cloudinary.v2.uploader.destroy(imageId);
+
+        await user.deleteOne();
+
+        res.status(200).json({
+            success: true,
+        });
+       
+    } catch (error) {
+        console.log(error)
+    }
 }
