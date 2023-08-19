@@ -11,8 +11,8 @@ router.get('/logout', logout)
 router.post('/forgetPassword', forgetPassword)
 router.put('/password/reset/:token', passwordReset)
 router.get('/userDashboard', isLoggedIn,getLoggedInUserDetails)
-router.put('/password/update', isLoggedIn,changePassword)
 router.put('/userdashboard/update', isLoggedIn,updateUserDetails)
+router.put('/password/update', isLoggedIn,changePassword)
 
 // admin routes
 // router.get('/admin/users',isLoggedIn, isAdmin, adminAllUser) //  m
