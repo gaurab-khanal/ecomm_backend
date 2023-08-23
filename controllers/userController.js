@@ -1,8 +1,6 @@
 const User = require('../models/user');
 const cookieToken = require('../utils/cookieToken');
-const fileUpload = require('express-fileupload');
 const cloudinary = require('cloudinary');
-const bcrypt = require('bcryptjs');
 const mailHelper = require('../utils/emailHelper');
 const crypto = require('crypto');
 
