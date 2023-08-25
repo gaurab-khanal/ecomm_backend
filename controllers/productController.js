@@ -2,6 +2,7 @@ const Product = require('../models/product');
 const cloudinary = require('cloudinary');
 const WhereClause = require('../utils/whereClause');
 
+
 exports.addProduct = ( async (req,res)=>{
     
     try {
@@ -55,7 +56,6 @@ exports.getAllProducts = async(req,res)=>{
         // products.limit().skip()
         
         let products = await productsObj.base.clone();
-        console.log(products)
         const filteredProductsNumber = products.length;
 
         productsObj.pager(resultPerPage);
@@ -93,57 +93,52 @@ exports.getSingleProducts = async(req,res)=>{
 
 exports.addReview = async(req,res)=>{
     try {
-        // verify and check if user has already done review in the past or not
-
-        const {rating, comment, productId} = req.body;
-
-       
+        const { rating, comment, productId } = req.body;
 
         const review = {
-            user: req.user._id,
-            name: req.user.name,
-            rating: Number(rating),
-            comment
+          user: req.user._id,
+          name: req.user.name,
+          rating: Number(rating),
+          comment,
         };
-
+      
         const product = await Product.findById(productId);
-
-
-        const isAlreadyReviewed = product.reviews.find(
-            (rev) => rev.user.toString()  === req.user._id
-        )
-
-        if (isAlreadyReviewed){
-            product.reviews.forEach((review)=>{
-                if(review.user.toString()  === req.user._id){
-                    review.comment = comment;
-                    review.rating = rating;
-                }
-            })
-        }else{
-            product.reviews.push(review);
-            product.noOfReviews = product.reviews.length;
+      
+        const AlreadyReview = product.reviews.find(
+          (rev) => rev.user.toString() === req.user._id.toString()
+        );
+      
+        if (AlreadyReview) {
+          product.reviews.forEach((review) => {
+            if (review.user.toString() === req.user._id.toString()) {
+              review.comment = comment;
+              review.rating = rating;
+            }
+          });
+        } else {
+          product.reviews.push(review);
+          product.noOfReviews = product.reviews.length;
         }
-
-        // adjust ratings(avg ratings)
-
-        product.ratings = product.reviews.reduce((acc,item)=>item.rating + acc, 0)/
-        product.reviews.length;
-
-        // save 
-
-        await product.save({validateBeforeSave: false});
-
+      
+        // adjust ratings
+      
+        product.ratings =
+          product.reviews.reduce((acc, item) => item.rating + acc, 0) /
+          product.reviews.length;
+      
+        //save
+      
+        await product.save({ validateBeforeSave: false });
+      
         res.status(200).json({
-            success: true,
-            product
-        })
-
-
-    } catch (error) {
+          success: true,
+        });
+     } catch (error) {
         console.log(error)   
     }
 }
+
+
 
 exports.deleteReview = async(req,res)=>{
     try {
@@ -152,34 +147,34 @@ exports.deleteReview = async(req,res)=>{
         const product = await Product.findById(productId);
 
         const reviews = product.reviews.filter(
-            (rev)=> rev.user.toString() !== req.user._id
+            (rev) => rev.user.toString() !== req.user._id.toString()
         )
 
         const noOfReviews = reviews.length;
 
-        // adjust ratings
-        
-        product.ratings = product.reviews.reduce((acc,item)=>item.rating+ acc, 0)/
-        product.reviews.length
+        const ratings = (noOfReviews===0)?0: reviews.reduce(
+            (acc,item)=>item.rating+acc,0
+        )/noOfReviews;
 
-        const ratings =  product.ratings
+        //update product
 
-        // update the product
-        await Product.findByIdAndUpdate(productId, {
-            reviews,
-            ratings,
-            noOfReviews
-        }, {
-            new: true,
-            runValidators: true,
-            useFindAndModify: false
-        }) 
+        await Product.findByIdAndUpdate(productId,
+            {
+                reviews,
+                ratings,
+                noOfReviews
+            },
+            {
+                new: true,
+                runValidators: true,
+                useFindAndModify: false
+            })
 
-        res.status(200).json({
-            success: true
-        })
+            res.status(400).json({
+                success: true
+            })
 
-    } catch (error) {
+     } catch (error) {
         console.log(error)   
     }
 }
