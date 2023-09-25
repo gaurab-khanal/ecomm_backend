@@ -14,9 +14,23 @@ exports.addProduct = ( async (req,res)=>{
             return res.status(401).send("Images are required!")
         }
 
+        // const file = req.files.photo;
+
+        // const result = await cloudinary.v2.uploader.upload(file.tempFilePath, {
+        //     folder: "users",
+        // })
+
+
         if(req.files){
-            for(let i = 0; i<req.files.photos.length;i++){
-                let result = await cloudinary.v2.uploader.upload(req.files.photos[i].tempFilePath,
+            const files = Array.isArray(req.files.photos) // Check if it's an array
+            ? req.files.photos // Multiple files, use as-is
+            : [req.files.photos]; // Single file, convert to an array
+      
+            console.log(req.files, "If executed")
+            console.log(files.length)
+            for(let i = 0; i<files.length;i++){
+                console.log("Inside for loop")
+                let result = await cloudinary.v2.uploader.upload(files[i].tempFilePath,
                     {
                         folder: "products"
                     })
@@ -223,18 +237,27 @@ exports.adminUpdateOneProduct = async (req,res)=>{
             return res.status(401).send("No Product Found with this id", )
         }
 
+       
         let imageArray = [];
 
         if(req.files){
             //destroy the existing image
 
             for( i = 0;i<product.photos.length; i++){
+                console.log("Destroying image")
                 const result = cloudinary.v2.uploader.destroy(product.photos[i]._id)
             }
 
+            const files = Array.isArray(req.files.photos) // Check if it's an array
+            ? req.files.photos // Multiple files, use as-is
+            : [req.files.photos]; // Single file, convert to an array
+    
+
             //upload and save the images
-            for(let i = 0; i<req.files.photos.length;i++){
-                let result = await cloudinary.v2.uploader.upload(req.files.photos[i].tempFilePath,
+            for(let i = 0; i<files.length;i++){
+                console.log("Uploadung image")
+
+                let result = await cloudinary.v2.uploader.upload(files[i].tempFilePath,
                     {
                         folder: "products" // folder name => .env
                     })

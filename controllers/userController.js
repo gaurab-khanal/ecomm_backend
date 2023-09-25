@@ -8,7 +8,7 @@ exports.signup = async (req, res) => {
     try {
 
         if (!req.files) {
-            return new Error("Photo is required for signup")
+            return res.send("Photo is required for signup")
         }
 
         const { name, email, password } = req.body;
@@ -116,7 +116,7 @@ exports.forgetPassword = async (req, res) => {
 
         await user.save({ validateBeforeSave: false });
 
-        const myUrl = `${req.protocol}://${req.get("host")}/api/v1/password/reset/${forgetToken}`;
+        const myUrl = `${process.env.FRONT_END_URL}/resetpassword/${forgetToken}`;
 
         const message = `Copy paste this link in your browser and hit enter \n\n ${myUrl}`;
 
@@ -153,7 +153,6 @@ exports.passwordReset = async (req, res) => {
             forgetPasswordToken: encryToken,
             forgetPasswordExpiry: { $gt: Date.now() }
         });
-        console.log(user.email);
         if(!user){
             return res.status(400).send("Token invalid or expired")
         }
@@ -283,7 +282,8 @@ exports.adminAllUser = async(req,res)=>{
             users
         })
     } catch (error) {
-        console.log(error)
+        console.log(error);
+        return res.status(400).json({error: err?.message ||" No user found"})
     }
 }
 
@@ -332,7 +332,7 @@ exports.adminUpdateOneUserDetails = async (req,res)=>{
             email: req.body.email,
             role: req.body.role
         };
-
+ 
 
         const user = await User.findByIdAndUpdate(req.params.id, newData, {
             new: true,
@@ -363,14 +363,19 @@ exports.adminDeleteOneUser = async (req,res)=>{
             res.status.send("No user found");
         }
 
-        const imageId = user.photo.id;
+        const imageId = user.photo?.id;
 
-        await cloudinary.v2.uploader.destroy(imageId);
+        if(imageId){
+            await cloudinary.v2.uploader.destroy(imageId);
+        }
+
+       
 
         await user.deleteOne();
 
         res.status(200).json({
             success: true,
+            message: "User deleted successfully"
         });
        
     } catch (error) {
