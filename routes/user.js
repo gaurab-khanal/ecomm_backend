@@ -5,22 +5,22 @@ const router = express.Router();
 
 
 
-router.post('/signup', signup)
-router.post('/login', login)
-router.get('/logout', logout)
-router.post('/forgetPassword', forgetPassword)
-router.put('/password/reset/:token', passwordReset)
-router.get('/userDashboard', isLoggedIn,getLoggedInUserDetails)
+router.post('/signup', signup) // done 
+router.post('/login', login)  // done
+router.get('/logout', logout)  // done
+router.post('/forgetPassword', forgetPassword) // done
+router.put('/password/reset/:token', passwordReset) // done
+router.get('/userDashboard', isLoggedIn,getLoggedInUserDetails) 
 router.put('/userdashboard/update', isLoggedIn,updateUserDetails)
 router.put('/password/update', isLoggedIn,changePassword)
 
 // admin routes
 // router.get('/admin/users',isLoggedIn, isAdmin, adminAllUser) //  m
 
-router.get('/admin/users',isLoggedIn, customRole('admin'), adminAllUser)
-router.get('/admin/user/:id',isLoggedIn, customRole('admin'), admingetOneUser)
-router.put('/admin/user/:id',isLoggedIn, customRole('admin'), adminUpdateOneUserDetails)
-router.delete('/admin/user/:id',isLoggedIn, customRole('admin'), adminDeleteOneUser)
+router.get('/admin/users',isLoggedIn, customRole('admin'), adminAllUser) // done
+router.get('/admin/user/:id',isLoggedIn, customRole('admin'), admingetOneUser) // done 
+router.put('/admin/user/:id',isLoggedIn, customRole('admin'), adminUpdateOneUserDetails) // done
+router.delete('/admin/user/:id',isLoggedIn, customRole('admin'), adminDeleteOneUser) // done
 
 // manager routes
 router.get('/manager/users',isLoggedIn, customRole('manager'), managerAllUser)
