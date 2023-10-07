@@ -58,10 +58,10 @@ const orderSchema = new mongoose.Schema({
             },
         }
     ],
-    paymentInfo: {
-        id: {
-            type: String
-        }
+    payment_method: {
+        type: String,
+        required: true,
+        default: 'esewa'
     },
     taxAmount: {
         type: Number,
