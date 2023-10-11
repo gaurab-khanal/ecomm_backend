@@ -79,6 +79,7 @@ exports.getOneOrder = async(req,res)=>{
 }
 
 
+
 exports.getLoggedInOrders = async(req,res)=>{
     try {
         const order = await Order.find({user: req.user._id});
@@ -177,6 +178,28 @@ exports.adminDeleteOrder = async(req,res)=>{
     } catch (error) {
         console.log(error)
     }
+}
+
+
+exports.getOrderForPayment = async(req,res,next)=>{
+
+    try {
+        const order = await Order.findById(req.body.oid);
+        if(!order){
+            return res.status(400).json({
+                error: "No Order Found"
+            });
+        }
+        req.order = order;
+        next();
+    } catch (error) {
+        return res.status(400).json({
+            error: error?.message || "No Order Found"
+        })
+    }
+
+
+
 }
 
 

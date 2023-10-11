@@ -12,6 +12,10 @@ const paymentSchema = mongoose.Schema({
         enum: ['esewa'],
         default: 'esewa'
     },
+    source_payment_id: {
+        type: String,
+        required: true,
+    },
     amount: {
         type: Number,
         required: true,
